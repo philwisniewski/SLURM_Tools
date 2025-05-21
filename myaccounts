@@ -1,0 +1,17 @@
+#!/bin/bash
+
+MY_USER="$USER"
+
+while [[ $# -gt 1 ]]; do
+	arg="$1"
+	case "$arg" in
+	    -u)
+		MY_USER="$2"
+	    	;;
+	    *)
+		;;
+	esac
+	shift
+done
+
+sbalance -u "$MY_USER"
