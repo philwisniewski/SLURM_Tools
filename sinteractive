@@ -1,0 +1,72 @@
+#!/bin/bash
+
+# sinteractive
+# a wrapper for srun
+#
+# Author: Philip Wisniewski
+#
+# Version History
+# 0.1 | 21 May 2025
+#
+
+
+
+help () {
+	echo "Usage: sinteractive [flags and arguments]"
+}
+
+
+
+if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+	help
+	exit 0
+fi
+
+
+
+PARTITION="slurm"
+NUM_NODES="1"
+NUM_TASKS="1"
+MY_ACCOUNT=""
+TIME_LIMIT="0-0:30:00"
+
+while [ $# -gt 2 ]; do
+	flag="$1"
+	arg="$2"
+	case "$flag" in
+	    "-A" )
+		MY_ACCOUNT="$arg"
+		;;
+	    "-p" )
+		PARTITION="$arg"
+		;;
+	    "-N" )
+		NUM_NODES="$arg"
+		;;
+	    "-n" )
+		NUM_TASKS="$arg"
+		;;
+	    "-t" )
+		TIME_LIMIT="$arg"
+		;;
+	    *)
+		;;
+	esac
+	shift 1
+done
+
+if [ -z "$MY_ACCOUNT" ]; then
+	res=$(/people/wisn769/tools/myaccounts)
+	res_line_count=$(echo "$res" | wc -l)
+
+	if [[ $res_line_count -le 2 ]]; then
+		echo "No SLURM allocations found for $USER!"
+		exit 1
+	fi
+
+	MY_ACCOUNT="$(echo "$res" | sed -n '3p' | awk '{print $1}')"
+fi
+
+
+
+srun -A "$MY_ACCOUNT" -p "$PARTITION" -N "$NUM_NODES" -n "$NUM_TASKS" --time="$TIME_LIMIT" --pty --unbuffered "$SHELL"
